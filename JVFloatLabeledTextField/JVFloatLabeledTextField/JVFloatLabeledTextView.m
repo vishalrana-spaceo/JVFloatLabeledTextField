@@ -188,6 +188,7 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     
     CGRect textRect = [self textRect];
     
+   // _placeholderLabel.backgroundColor = [UIColor redColor];
     _placeholderLabel.alpha = [self.text length] > 0 ? 0.0f : 1.0f;
     _placeholderLabel.frame = CGRectMake(textRect.origin.x, textRect.origin.y,
                                          placeholderLabelSize.width, placeholderLabelSize.height);
@@ -197,12 +198,24 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     BOOL firstResponder = self.isFirstResponder;
     _floatingLabel.textColor = (firstResponder && self.text && self.text.length > 0 ?
                                 self.labelActiveColor : self.floatingLabelTextColor);
-    if ((!self.text || 0 == [self.text length]) && !self.alwaysShowFloatingLabel) {
+    if (firstResponder) {
+        _placeholderLabel.alpha = 0;
+    }
+//    if ((!self.text || 0 == [self.text length]) && !self.alwaysShowFloatingLabel) {
+//        [self hideFloatingLabel:firstResponder];
+//    }
+//    else {
+//        [self showFloatingLabel:firstResponder];
+//    }
+ 
+    
+    if (!firstResponder) {
         [self hideFloatingLabel:firstResponder];
     }
     else {
         [self showFloatingLabel:firstResponder];
     }
+    
     
     // Without this code, the size of the view is not calculated correctly when it
     // is first displayed. Only seems relevant when scroll is disabled.
@@ -258,6 +271,7 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     
     if ((animated || 0 != _animateEvenIfNotFirstResponder)
         && (0 == self.floatingLabelShouldLockToTop || _floatingLabel.alpha != 1.0f)) {
+       // self.placeholderLabel.text = @"";
         [UIView animateWithDuration:_floatingLabelShowAnimationDuration
                               delay:0.0f
                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut
@@ -272,14 +286,25 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 - (void)hideFloatingLabel:(BOOL)animated
 {
     void (^hideBlock)(void) = ^{
-        self->_floatingLabel.alpha = 0.0f;
-        self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
-                                          self->_floatingLabel.font.lineHeight + self->_placeholderYPadding,
-                                          self->_floatingLabel.frame.size.width,
-                                          self->_floatingLabel.frame.size.height);
+        if (self.text.length > 0){
+            CGFloat top = self->_floatingLabelYPadding;
+            self->_floatingLabel.alpha = 1.0f;
+            self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
+            top,
+            self->_floatingLabel.frame.size.width,
+            self->_floatingLabel.frame.size.height);
+        }else{
+            self.placeholderLabel.alpha = 1.0;
+            self->_floatingLabel.alpha = 0.0f;
+            self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
+                                              self->_floatingLabel.font.lineHeight + self->_placeholderYPadding,
+                                              self->_floatingLabel.frame.size.width,
+                                              self->_floatingLabel.frame.size.height);
+        }
+        
         
     };
-    
+  //  self.placeholderLabel.text = self.floatingLabel.text;
     if (animated || 0 != _animateEvenIfNotFirstResponder) {
         [UIView animateWithDuration:_floatingLabelHideAnimationDuration
                               delay:0.0f

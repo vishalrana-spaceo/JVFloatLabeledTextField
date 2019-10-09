@@ -64,8 +64,8 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     _floatingLabelReductionRatio = 70;
     _floatingLabelFont = [self defaultFloatingLabelFont];
     _floatingLabel.font = _floatingLabelFont;
-    _floatingLabelTextColor = [UIColor grayColor];
-    _floatingLabel.textColor = _floatingLabelTextColor;
+//    _floatingLabelTextColor = [UIColor grayColor];
+//    _floatingLabel.textColor = _floatingLabelTextColor;
     _animateEvenIfNotFirstResponder = NO;
     _floatingLabelShowAnimationDuration = kFloatingLabelShowAnimationDuration;
     _floatingLabelHideAnimationDuration = kFloatingLabelHideAnimationDuration;
@@ -131,6 +131,7 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 - (void)showFloatingLabel:(BOOL)animated
 {
     void (^showBlock)(void) = ^{
+        
         self->_floatingLabel.alpha = 1.0f;
         self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
                                           self->_floatingLabelYPadding,
@@ -139,6 +140,7 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     };
     
     if (animated || 0 != _animateEvenIfNotFirstResponder) {
+        [super setAttributedPlaceholder:[[NSAttributedString alloc] initWithString:@""]];
         [UIView animateWithDuration:_floatingLabelShowAnimationDuration
                               delay:0.0f
                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseOut
@@ -153,15 +155,27 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 - (void)hideFloatingLabel:(BOOL)animated
 {
     void (^hideBlock)(void) = ^{
-        self->_floatingLabel.alpha = 0.0f;
-        self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
-                                          self->_floatingLabel.font.lineHeight + self->_placeholderYPadding,
-                                          self->_floatingLabel.frame.size.width,
-                                          self->_floatingLabel.frame.size.height);
-
+        if (self.text.length > 0){
+            self->_floatingLabel.alpha = 1.0f;
+            
+            self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
+            self->_floatingLabelYPadding,
+            self->_floatingLabel.frame.size.width,
+            self->_floatingLabel.frame.size.height);
+        }else{
+            self->_floatingLabel.alpha = 0.0f;
+            
+            self->_floatingLabel.frame = CGRectMake(self->_floatingLabel.frame.origin.x,
+            self->_floatingLabel.font.lineHeight + self->_placeholderYPadding,
+            self->_floatingLabel.frame.size.width,
+            self->_floatingLabel.frame.size.height);
+        }
     };
-    
+   
+    [self setCorrectPlaceholder:_floatingLabel.text];
+//    [super setAttributedPlaceholder:[[NSAttributedString alloc] initWithString:_floatingLabel.text]];
     if (animated || 0 != _animateEvenIfNotFirstResponder) {
+        
         [UIView animateWithDuration:_floatingLabelHideAnimationDuration
                               delay:0.0f
                             options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionCurveEaseIn
@@ -237,6 +251,12 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
         NSAttributedString *attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder
                                                                                     attributes:@{NSForegroundColorAttributeName: self.placeholderColor}];
         [super setAttributedPlaceholder:attributedPlaceholder];
+    }
+    else if (placeholder) {
+        UIColor *newColour = [UIColor colorWithRed:155.0/255 green:155.0/255 blue:155.0/255 alpha:1.0];
+        NSAttributedString *attributedPlaceholder = [[NSAttributedString alloc] initWithString:placeholder
+                                                                                    attributes:@{NSForegroundColorAttributeName: newColour}];
+        [super setAttributedPlaceholder:attributedPlaceholder];
     } else {
         [super setPlaceholder:placeholder];
     }
@@ -269,7 +289,8 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 
 - (void)setPlaceholderColor:(UIColor *)color
 {
-    _placeholderColor = color;
+//    _placeholderColor = color;
+    _placeholderColor = [UIColor colorWithRed:155.0/255 green:155.0/255 blue:155.0/255 alpha:1.0];
     [self setCorrectPlaceholder:self.placeholder];
 }
 
@@ -285,9 +306,9 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
 - (CGRect)editingRectForBounds:(CGRect)bounds
 {
     CGRect rect = [super editingRectForBounds:bounds];
-    if ([self.text length] || self.keepBaseline) {
+//    if ([self.text length] || self.keepBaseline) {
         rect = [self insetRectForBounds:rect];
-    }
+//    }
     return CGRectIntegral(rect);
 }
 
@@ -369,7 +390,16 @@ static CGFloat const kFloatingLabelHideAnimationDuration = 0.3f;
     BOOL firstResponder = self.isFirstResponder;
     _floatingLabel.textColor = (firstResponder && self.text && self.text.length > 0 ?
                                 self.labelActiveColor : self.floatingLabelTextColor);
-    if ((!self.text || 0 == [self.text length]) && !self.alwaysShowFloatingLabel) {
+//    if ((!self.text || 0 == [self.text length]) && !self.alwaysShowFloatingLabel) {
+//        [self hideFloatingLabel:firstResponder];
+//    }
+//    else {
+//        [self showFloatingLabel:firstResponder];
+//    }
+    if (!firstResponder) {
+        if (self.placeholder.length == 0){
+            self.placeholder = self->_floatingLabel.text;
+        }
         [self hideFloatingLabel:firstResponder];
     }
     else {
